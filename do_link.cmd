@@ -1,1 +1,4 @@
-link /ENTRY:_myWinMain /VERBOSE:LIB /OUT:"Debug/TaskSwitchXP.exe" /INCREMENTAL /MANIFEST /MANIFESTFILE:"Debug\TaskSwitchXP.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Debug/TaskSwitchXP.pdb" /MAP /SUBSYSTEM:WINDOWS /DYNAMICBASE:NO /MACHINE:X86 /ERRORREPORT:PROMPT kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib generic.obj lang.obj main.obj TaskSwitchXP.obj tscontrol.obj
+rem todo : create makefile
+if not exist Debug md Debug
+cd Debug
+link /VERBOSE:LIB /OUT:"TaskSwitchXP.exe" /INCREMENTAL /DEBUG /PDB:"TaskSwitchXP.pdb" /MAP /SUBSYSTEM:WINDOWS /DYNAMICBASE:NO /MACHINE:X86 /ERRORREPORT:PROMPT kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib TaskSwitchXP.obj generic.obj lang.obj main.obj TaskSwitchXP.obj tscontrol.obj TaskSwitchXP.res
