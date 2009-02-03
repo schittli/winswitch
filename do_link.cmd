@@ -1,3 +1,5 @@
+rem INCLUDE=E:\Program Files\Microsoft Visual Studio 8\VC\include;E:\Program Files\Microsoft Visual Studio 8\VC\PlatformSDK\Include
+rem LIB=E:\Program Files\Microsoft Visual Studio 8\VC\lib;E:\Program Files\Microsoft Visual Studio 8\VC\PlatformSDK\Lib
 rem todo : create makefile
 if not exist Debug md Debug
 cd Debug
