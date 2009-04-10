@@ -1,0 +1,68 @@
+<!-- Типа scratchpad для упражнений -->
+<script type="text/javascript">
+
+dall = document.all; //IE создаст глобальный объект, FF - нет
+
+function do_something_click()
+{
+  writeln(document.getElementById("input_msg").value);
+}
+
+// Разбивка строки по элементам и запись их в массив
+function split_words()
+{
+  inp = document.all.input_msg;
+  words = inp.value.split(" ");
+  for (w in words)
+  {
+    writeln(words[w]);
+  }
+}
+
+function demo_alerts()
+{
+  //alert(dall.input_msg.value); // для IE сработает, для FF - нет
+  alert("hello world");
+  window.alert("hello world 2"); // the same
+}
+
+function cls_output_click()
+{
+  //console = document.getElementById("console_output");
+  console = document.all.console_output; // the same
+  console.value = "";
+}
+
+function writeln(s)
+{
+  //console = document.getElementById("console_output");
+  console = document.all.console_output; // the same
+  console.value = console.value + s + "\n";
+}
+
+</script>
+
+<html>
+  <body>
+
+    <table>
+      <tr>
+        <td>
+          <textarea cols="90" rows="10" id="input_msg" name="Input message">input your message here</textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <textarea cols="90" rows="10" id="console_output"></textarea>
+        </td>
+      </tr>
+    </table>
+
+    <input name="do_something" type="button" onclick="do_something_click()"
+    value="Do Something"></input>
+
+    <input name="cls_output" type="button" onclick="cls_output_click()"
+    value="CLS output"></input>
+
+  </body>
+</html>
