@@ -5,7 +5,13 @@ dall = document.all; //IE создаст глобальный объект, FF - нет
 
 function do_something_click()
 {
-  writeln(document.getElementById("input_msg").value);
+  //writeln(document.getElementById("input_msg").value);
+  //document.getElementById("scr").innerHTML = "this is the test";
+  //document.getElementById("btn_do_something").disabled = true;
+  //alert ("<script>alert('test');<\/script>");
+  document.getElementById("scr").innerHTML = "<script>alert('test');<\/script>";
+  //document.getElementById("scr").innerHTML = "<script language=javascript>document.write(\"HELLO stupid coder!!!\");<\/script>";
+  //document.write("<script language=javascript>document.write(\"HELLO stupid coder!!!\");<\/script>");
 }
 
 // Разбивка строки по элементам и запись их в массив
@@ -44,6 +50,7 @@ function writeln(s)
 
 <html>
   <body>
+  <div id="scr"></div>
 
     <table>
       <tr>
@@ -58,11 +65,12 @@ function writeln(s)
       </tr>
     </table>
 
-    <input name="do_something" type="button" onclick="do_something_click()"
+    <input id="btn_do_something" name="do_something" type="button" onclick="do_something_click()"
     value="Do Something"></input>
 
     <input name="cls_output" type="button" onclick="cls_output_click()"
     value="CLS output"></input>
+    <a href="mailto:klvov@mailru?subject=He %22 llo&body=World">MAIL.RU</a>
 
   </body>
 </html>
