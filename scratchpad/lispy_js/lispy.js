@@ -92,6 +92,13 @@ function proc_str_concat(cl) {
   return new Cell('String', s);
 }
 
+function proc_domsetval(cl) {
+  var id = cl[0].val;
+  var newval = cl[1].val;
+  $('#' + id).val(newval);
+  return true_sym;
+}
+
 function Cell(type, val) {
   this.type = type;
   this.val = val;
@@ -189,6 +196,15 @@ function _eval(cell, env) {
       // вычислить и вернуть последнюю cell
       return _eval(cell.list[cell.list.length - 1], env);
     }
+    if (cell.list[0].val == 'and') {
+      var r = true_sym;
+      for (var i = 1; i < cell.list.length; i++) {
+        r = _eval(cell.list[i], env);
+        if (r == false_sym)
+          return r;
+      }
+      return r;
+    }
     if (cell.list[0].val == 'lambda') {
       cell.type = 'Lambda';
       cell.env = env;
@@ -256,6 +272,7 @@ global_env.add('>', new Proc(proc_greater));
 global_env.add('<=', new Proc(proc_less_equal));
 global_env.add('s=', new Proc(proc_str_equal));
 global_env.add('s+', new Proc(proc_str_concat));
+global_env.add('domsetval', new Proc(proc_domsetval));
 
 function Env(outerEnv, params, args) {
   this._map = {}; // symbol -> cell
@@ -305,6 +322,12 @@ function runTests() {
   TEST('(s= "hello" "hello")', "#t");
   TEST('(s= "hello" "world")', "#f");
   TEST('(s+ "hello" "world")', "helloworld");
+  TEST('(domsetval "button1" "TouchedFromLispy")', "#t");
+  TEST('(domsetval "button1" (s+ "Again" "AndAgain"))', "#t");
+  TEST('(and (> 10 1) (> 10 1))', '#t');
+  TEST('(and (> 10 1) (< 10 1))', '#f');
+  TEST('(and #t #t #t)', '#t');
+  TEST('(and #t #t #f)', '#f');
   //
   TEST("(quote (testing 1 (2.0) -3.14e159))", "(testing 1 (2.0) -3.14e159)");
   TEST("(+ 2 2)", "4");
