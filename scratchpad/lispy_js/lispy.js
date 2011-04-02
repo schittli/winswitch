@@ -410,7 +410,7 @@ function runTests() {
   TEST('(s= "hello" "world")', "#f");
   TEST('(s+ "hello" "world")', "helloworld");
   TEST('(DOMSETVAL "button1" "TouchedFromLispy")', "#t");
-  TEST('(DOMSETVAL "button1" (s+ "Again" "AndAgain"))', "#t");
+  TEST('(DOMSETVAL "button1" (s+ "TouchedFromLispy" "Again"))', "#t");
   TEST('(and (> 10 1) (> 10 1))', '#t');
   TEST('(and (> 10 1) (< 10 1))', '#f');
   TEST('(and #t #t #t)', '#t');
@@ -552,6 +552,5 @@ function execRules(rulesObj) {
   }
 }
 
-eval(Rules);
-execRules(o.RULES);
+
 
