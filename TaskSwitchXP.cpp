@@ -3635,7 +3635,7 @@ LRESULT CALLBACK TaskSwitchWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 								(g_pTs[g_nCurTs].dwFlags & TI_SELECTED)?FALSE:TRUE   ) )
 								DestroyWindow(hwnd);
 							break;
-						case VK_DELETE:
+						case VK_DELETE: // обработчик по Win+K
 							RemoveSelected(hwnd);
 							break;
 						case VK_F5:
@@ -3838,7 +3838,7 @@ LRESULT CALLBACK TaskSwitchWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					}
 					break;
 
-				case VK_DELETE:
+				case VK_DELETE: // обработчик по Win+F12
 					RemoveSelected(hwnd);
 					break;
 
@@ -4195,9 +4195,17 @@ void ProcessTypeBuffer(HWND hwnd) //tag kl2
 	int NumMatched = 0; // count matching entries
 	ZeroMemory (Matched, sizeof (Matched) );
 	int tblen = lstrlen(g_szTypeBuffer);
+  //
+  // перечитываем список окон (нужно для реализации
+  // фильтрации по введенным символам)
+  OutputDebugString(L"removed, about to reset task list\r\n");
+  MyEnumDesktopWindows();
+  SortTaskListByModuleName(hwnd);
+  //
 	if (tblen <= 0)	
 	{
 		SelectTask(hwnd, 0, FALSE); 
+    return;
 	}
 	for (int i = 0; i < g_nTs; i++)
 	{
@@ -4213,8 +4221,34 @@ void ProcessTypeBuffer(HWND hwnd) //tag kl2
 			}
 		}
 	}
+  if (NumMatched == 0) {
+    return;
+  }
 	//if there is only one matching task, switch to it immediately
-	if (NumMatched == 1) SwitchToCurTask(hwnd);
+  else if (NumMatched == 1) {
+    wsprintf(tmp, L"Single matching task, switching to it.");
+    OutputDebugString(tmp);
+    SwitchToCurTask(hwnd);
+  }
 	else { // do some clever things... may be later
+    // удалить из списка то, что не начинается с введенных символов
+    // с помощью DeleteTsItem
+    wsprintf(tmp, L"Number of matching tasks: %d, about to delete non-matched\n",
+        NumMatched);
+    OutputDebugString(tmp);
+    //wsprintf(tmp, L"g_nCurTs: %d\n", g_nCurTs);
+    //OutputDebugString(tmp);
+    //g_nCurTs
+    for (int i = g_nTs - 1; i >= 0; i--)
+    {
+      if (Matched[i] != 1)
+      {
+        wsprintf(tmp, L"About to delete item: %d\n", i);
+        OutputDebugString(tmp);
+        DeleteTsItem(i);
+      }
+    }
+    SortTaskListByModuleName(hwnd);
+		SelectTask(hwnd, 0, FALSE); 
 	}
 }
