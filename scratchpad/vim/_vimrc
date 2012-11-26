@@ -21,12 +21,13 @@ set hls
 " инкрементальный поиск
 set is
 " ширина текста
-set textwidth=76 " так отформатировано на lib.ru
+" set textwidth=76 " так отформатировано на lib.ru
+set textwidth=100 " у нас в БСС решили пока так
 " минимальная высота окна пусть будет 0 (по умолчанию - 1)
 set winminheight=0
 " установить шрифт Consolas
-set guifont=consolas:h10:cRUSSIAN
-set printfont=consolas:h10:cRUSSIAN
+set guifont=consolas:h8:cRUSSIAN
+set printfont=consolas:h8:cRUSSIAN
 " настраиваю для работы с русскими словами (чтобы w, b, * понимали
 " русские слова)
 set iskeyword=@,48-57,_,192-255
@@ -40,7 +41,6 @@ set go-=m
 set nowrapscan
 " не надо засорять все бэкапными файлами:
 set nobackup
-set nowritebackup
 " выключить отображение колонки фолдинга по умолчанию
 set foldcolumn=0
 " автоматически перечитывать файл, если он был изменен в другом приложении
@@ -82,11 +82,16 @@ set tabstop=2
 set shiftwidth=2
 set expandtab
 
-nnoremap <F9> :execute SaveRunCommand()<CR><CR>
-
 function! SaveRunCommand()
-  execute ":update"
-  return ":!do_nmake.cmd"
+  execute "silent update"
+  "return ":!do_nmake.cmd"
+  execute "echo system('do_nmake.cmd')" 
+endfunction
+nnoremap <F9> :call SaveRunCommand()<CR>
+inoremap <F9> <Esc>:call SaveRunCommand()<CR>
+
+function! ReplaceBackslashesWithSlashes(inp)
+  return substitute(a:inp, "\\", "\/", "g")
 endfunction
 
 let pascal_delphi=1
@@ -99,24 +104,25 @@ iab ffi Form.Fields.FieldByName('').AsInteger<Left><Left><Left><Left><Left><Left
 iab fff Form.Fields.FieldByName('').AsFloat<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
 iab ffs Form.Fields.FieldByName('').AsString<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
 iab ffd Form.Fields.FieldByName('').AsDateTime<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
-iab err Error(errTrace, cErrorDir, cModuleName, cFunctionName,<CR> '', '', 0);<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
+iab err Error(errTrace, cLogDir, cModuleName, cFunctionName,<CR> '', '', 0);<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
 iab qerr Error(errTrace, cErrorDir, cModuleName, cFunctionName,<CR> 'SQL Error', Q.LastErrorMessage, Q.LastError);
 iab ift if then<CR>begin<Left><Left><Left><Left><Left><Backspace><End><CR>end;<Left><Left><Left><Left><Backspace>
 iab pbs Q.ParamByName('').AsString<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
 iab pbi Q.ParamByName('').AsInteger<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
 iab pbf Q.ParamByName('').AsFloat<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
 iab pbd Q.ParamByName('').AsDateTime<Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left><Left>
-iab sm ShowMessage();<Left><Left>
+iab sm vShowMessage();<Left><Left>
 iab mbe MessageBox(ErrMsg, LString('ST_ERROR'), mbOK or mbIconHand);
 iab fndc cFunctionName : string;
 iab fndf cFunctionName := '';<Left><Left>
 iab ffc Form.FindComponent('')<Left><Left>
 iab ff Form.Fields.
-iab dd DbgTO();<Left><Left>
 iab fm Fmt.Format('')<Left><Left>
 iab fdoc {**<CR>  Desc here<CR>@author k.lvov<CR>@param Desc param here<CR>@return Desc return value here<CR>*}<Left><Left><Backspace><Backspace>
 iab rts RecordToString()<Left>
 iab pts ParamsListToString()<Left>
+iab cst try raise('call stack'); except vShowMessage(Exception.CallStack); end;<Esc>^
+iab wgetqr qr := Nil;<CR>try<CR>while GetQR('', qr) do<CR>begin<CR>end;<CR>finally<CR>FreeObject(qr);<CR>end;
 
 function! Sql2Bls() range
   for i in range(a:firstline, a:lastline)
@@ -141,7 +147,7 @@ function! Bls2Sql() range
       let repl = substitute(getline(i), "^\\s*+\\s\\+'\\(.*\\) '$", "\\1", "g")
     endif
     call setline(i, repl)
-  endfor                           	
+  endfor                               
 endfunction
 
 function! Strings2Delphi() range
@@ -173,7 +179,7 @@ function! Strings2DelphiRevert() range
       let repl = substitute(src, "^\\s*+\\s\\+'\\(.*\\)'#13#10$", "\\1", "g")
     endif
     call setline(i, repl)
-  endfor                           	
+  endfor                               
 endfunction
 
 vnoremap ,q :call Sql2Bls()<CR>
@@ -181,7 +187,23 @@ vnoremap ,Q :call Bls2Sql()<CR>
 vnoremap ,d :call Strings2Delphi()<CR>
 vnoremap ,D :call Strings2DelphiRevert()<CR>
 
-" открыть тэг в новой вкладке
+vnoremap ,f :!tidy -q -i -xml -raw -w 5000<CR>
+
+" Поднять текущий файл в Explorer
+function! Exup()
+  execute 'silent !start explorer /select, '.shellescape(expand('%:p'), 1)
+endfunction
+nnoremap <M-e> :call Exup()<CR>
+
+" Исполнить python'овский скрипт
+function! ExecPython()
+  execute 'silent update'
+" execute 'silent !start cmd /c \\SRV\utils\python266\python.exe '.shellescape(expand('%:p'), 1).' & pause'
+" execute "echo system('\\\\SRV\\utils\\python266\\python.exe ".shellescape(expand('%:p'), 1)."')"
+  execute "echo system('C:\\Python26\\python.exe ".shellescape(expand('%:p'), 1)."')"
+endfunction
+nnoremap <M-p> :call ExecPython()<CR>
+
 map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
 
 "END БСС Северо-Запад SECTION
@@ -224,7 +246,11 @@ let Tlist_GainFocus_On_ToggleOpen = 1
 let Tlist_WinWidth = 50
 
 " <F12> - buffer explorer plugin
-map <F12> :BufExplorer<CR>
+" map <F12> :BufExplorer<CR>
+" <F12> - Fuzzy finder plugin
+map <F12> :FufBuffer<CR>
+" <C-F12> - Fuzzy finder plugin (search for tags)
+map <C-F12> :FufCoverageFile<CR>
 
 " <F8> File encoding for open
 " ucs-2le - MS Windows unicode encoding
