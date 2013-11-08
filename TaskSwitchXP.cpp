@@ -1,12 +1,14 @@
 // TaskSwitchXP.cpp
 
 #include "stdafx.h"
+#include <tlhelp32.h>
 #include "main.h"
 #include "lang.h"
 #include "generic.h"
 #include "tscontrol.h"
 #include "TaskSwitchXP.h"
 #include "resource.h"
+#include "WinBase.h"
 
 
 #pragma comment(lib, "Msimg32.lib")
@@ -1217,10 +1219,13 @@ BOOL _AddNewTaskWindow(HWND hwndOwner, HWND hwnd) {
 			PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ti.dwProcessId);
 
 		if (hProcess) {
-
+			// this works ok, it opens every process, even 64bit
+			//wsprintf(tmp, L"process %d successfully opened\r\n", ti.dwProcessId); OutputDebugString(tmp);
 			DWORD dw;
 			HMODULE hMod;
-			if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &dw)) {
+			if (EnumProcessModulesEx(hProcess, &hMod, sizeof(hMod), &dw, LIST_MODULES_ALL)) {
+			  // EnumProcessModules does not work for 64bit processes, don't know why
+		      //wsprintf(tmp, L"process %d successfully enumed modules\r\n", ti.dwProcessId); OutputDebugString(tmp);
 
 				int len = MAX_PATH;
 				ti.pszExePath = (PWSTR)HeapAlloc(g_hheapWnd, 
@@ -1238,8 +1243,68 @@ BOOL _AddNewTaskWindow(HWND hwndOwner, HWND hwnd) {
 					HeapFree(g_hheapWnd, 0, ti.pszExePath);
 					ti.pszExePath = NULL;
 				}
-				n = GetModuleBaseName(hProcess, hMod, ti.szModuleName, len * sizeof (WCHAR) );
+				n = GetModuleBaseName(hProcess, hMod, ti.szModuleName, len * sizeof (WCHAR) ); // this is correct
+				//wsprintf(tmp, L" process id: %d", ti.dwProcessId);
+				//lstrcat(ti.szModuleName, tmp);
+				//n = GetModuleFileNameEx(hProcess, hMod, ti.szModuleName, len * sizeof (WCHAR) ); // full path, does not work for x64 processes
+				// n = GetProcessImageFileName(hProcess, ti.szModuleName, len * sizeof (WCHAR) ); // also does not work for x64 processes
+                
+				//DWORD dSize = MAX_PATH;
+				//if (!QueryFullProcessImageName(hProcess, 1, ti.szModuleName, &dSize )) {
+				//	OutputDebugString(L"function QueryFullProcessImageName has failed\r\n");
+				//}
+				//lstrcat(ti.szModuleName, L"*"); // debug - just to ensure I'm in right place
+
+				// snapshot of all processes seems able to retrieve 64-bit module names from within 32 bit process
+
+				/*
+				if (lstrlen(ti.szModuleName) == 0) {
+					OutputDebugString(L"yep!\r\n");
+					HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+					//if (hSnapshot == HANDLE(-1)) __raise(L"ahaaha");
+					PROCESSENTRY32 pe;
+					pe.dwSize = sizeof(PROCESSENTRY32);
+					BOOL retval = Process32First(hSnapshot, &pe);
+					while (retval) {
+					  DWORD pid = pe.th32ProcessID;
+					  if (pid == ti.dwProcessId) {
+						  OutputDebugString(pe.szExeFile);
+						  //lstrcpyn(ti.szModuleName, pe.szExeFile, MAX_PATH);
+					  }
+					  //OutputDebugString(pe.szExeFile);
+					  //OutputDebugString(L" ");
+					  //wsprintf(tmp, L" process id: %d", pid);
+					  //OutputDebugString(tmp);
+					  //OutputDebugString(L"\r\n");
+					  retval = Process32Next(hSnapshot, &pe);
+					}
+					CloseHandle(hSnapshot);
+				}
+				*/
 			}
+      else {
+        DWORD dwLastError = GetLastError();
+        wsprintf(tmp, L"Failed to call EnumProcessModulesEx for process %d, error %x\r\n", ti.dwProcessId, dwLastError); OutputDebugString(tmp);
+        DWORD dSize = MAX_PATH;
+		if (!QueryFullProcessImageName(hProcess, 0, ti.szModuleName, &dSize )) {
+		  OutputDebugString(L"function QueryFullProcessImageName also has failed\r\n");
+		}
+		else { // ok, got full process image name
+			WCHAR *part;
+			WCHAR last_part[4000];
+			part = wcstok(ti.szModuleName, L"\\");
+			while (part != NULL) {
+				//OutputDebugString(part);
+				//OutputDebugString(L"\r\n");
+				lstrcpy(last_part, part);
+				part = wcstok(NULL, L"\\");
+			}
+			lstrcpy(ti.szModuleName, last_part);
+			//OutputDebugString(last_part);
+			//OutputDebugString(L"\r\n");
+
+		}
+      }
 			CloseHandle(hProcess);
 			hProcess = NULL;
 
